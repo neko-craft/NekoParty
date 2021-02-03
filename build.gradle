@@ -3,7 +3,7 @@ plugins {
     id 'idea'
 }
 
-group 'com.example'
+group 'cn.apisium.nekoparty'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -20,7 +20,8 @@ repositories {
 
 dependencies {
     compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
-    compileOnly 'com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT'
+    compileOnly files('server.jar')
+    compileOnly 'org.jetbrains:annotations:20.1.0'
     annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
 }
 

@@ -1,6 +1,6 @@
-# BukkitPlugin
+# NekoParty
 
-Just a simple bukkit plugin.
+A party in Minecraft.
 
 ## Build
 
@@ -10,7 +10,7 @@ gradlew jar
 
 ## Author
 
-Author
+Shirasawa
 
 ## License
 
