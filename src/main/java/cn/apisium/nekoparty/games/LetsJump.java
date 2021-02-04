@@ -2,6 +2,7 @@ package cn.apisium.nekoparty.games;
 
 import cn.apisium.nekoparty.Knockout;
 import cn.apisium.nekoparty.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -42,7 +43,7 @@ public final class LetsJump extends Game {
     }
 
     private void calcPromotionCount() {
-        remainsCount = knockout.remains.size() / 4 * 3;
+        remainsCount = knockout.remains.size() / 2;
     }
     private void checkPlayerCount() {
         calcPromotionCount();
@@ -122,7 +123,7 @@ public final class LetsJump extends Game {
     @Override
     public void sendIntroduction() {
         knockout.title("§e跳跃吧", "§b第一轮");
-        knockout.messages("§b§m          §r §a[§e游戏介绍§a] §b§m          \n§a  玩家需要在前方的方块中找到正确的路最终到达终点.\n§b  你的目标是尽快到达终点, 否则将会被淘汰!\n§b§m                                                          §r\n");
+        Bukkit.broadcastMessage("§b§m          §r §a[§e游戏介绍§a] §b§m          \n§a  玩家需要在前方的方块中找到正确的路最终到达终点.\n§b  你的目标是尽快到达终点, 否则将会被淘汰!\n§b§m                                                          §r\n");
     }
 
     @Override

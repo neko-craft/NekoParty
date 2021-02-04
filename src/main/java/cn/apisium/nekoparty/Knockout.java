@@ -7,6 +7,7 @@ import com.destroystokyo.paper.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -17,10 +18,7 @@ import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public final class Knockout implements Listener {
     private final Location center;
@@ -29,8 +27,9 @@ public final class Knockout implements Listener {
     private final RememberTheBlock rememberTheBlock;
     private final Set<Player> players;
     public final Set<Player> remains;
-    private final HashMap<UUID, Integer> ranking = new HashMap<>();
-    private int knockout, count, stage = 0;
+    private final LinkedList<String> ranking = new LinkedList<>();
+    private int knockout, stage;
+    private final int count;
     private boolean started = false;
     public Knockout(final Block center, final Set<Player> players) {
         this.players = players;
@@ -48,9 +47,17 @@ public final class Knockout implements Listener {
         teleport(center);
     }
 
+    public void clear() {
+        letsJump.clear();
+        lastOfUS.clear();
+        rememberTheBlock.clear();
+    }
+
     private void nextGame() {
         switch (++stage) {
-            case 1: break;
+            case 1:
+                letsJump.sendIntroduction();
+                break;
             case 2:
                 rememberTheBlock.sendIntroduction();
                 break;
@@ -61,8 +68,11 @@ public final class Knockout implements Listener {
         }
         Utils.timer(20, 20 * 55, 5, it -> title("§e" + (5 - it) + "!", "§b准备时间即将结束!"), () -> {
             started = true;
+            sound();
             switch (stage) {
                 case 1:
+                    letsJump.init();
+                    letsJump.teleport();
                     break;
                 case 2:
                     rememberTheBlock.init();
@@ -70,19 +80,20 @@ public final class Knockout implements Listener {
                 case 3:
                     lastOfUS.init();
                     lastOfUS.teleport();
-                    break;
             }
             setGameMode(GameMode.ADVENTURE);
             Utils.timer(20, 5 * 20, 10, it -> title("§e" + (10 - it) + "!", "§b游戏即将开始!"), () -> {
                 title("§a游戏开始!", "");
+                sound();
                 switch (stage) {
                     case 1:
+                        letsJump.start();
                         break;
                     case 2:
                         rememberTheBlock.start();
+                        break;
                     case 3:
                         lastOfUS.start();
-                        break;
                 }
             });
         });
@@ -99,9 +110,11 @@ public final class Knockout implements Listener {
     public void knockout(final Player player) {
         remains.remove(player);
         player.setGameMode(GameMode.SPECTATOR);
-        ranking.put(player.getUniqueId(), knockout--);
+        knockout--;
+        ranking.addFirst(player.getName());
         if (knockout != 0) {
             title(player, "§c您已经被淘汰了!", "§b您可以继续观战");
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1f, 1f);
             if (stage == 1) {
                 letsJump.onKnockout(player);
             }
@@ -134,9 +147,18 @@ public final class Knockout implements Listener {
                     lastOfUS.stop();
                     setGameMode(GameMode.SPECTATOR);
                     lastOfUS.clear();
-                    title("§a游戏已结束!", "§b稍后将会进行排名计算!", 40);
+                    title("§a游戏已结束!", "", 40);
+                    Iterator<String> iterator = ranking.iterator();
+                    Bukkit.broadcastMessage("§b§m          §r §a[§e最终排名§a] §b§m          ");
+                    for (int i = 1; i <= 10 && iterator.hasNext(); i++) {
+                        Bukkit.broadcastMessage("  §e" + i + ". §a" + iterator.next());
+                    }
+                    Bukkit.broadcastMessage("§b§m                                                          ");
                 }
+                break;
+            default: return;
         }
+        sound();
     }
 
     public void title(final String title, final String sub) {
@@ -146,17 +168,17 @@ public final class Knockout implements Listener {
         });
     }
 
+    public void sound() {
+        players.forEach(it -> {
+            if (it.isOnline()) it.playSound(it.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+        });
+    }
+
     public void title(final String title, final String sub, final int time) {
         final Title tmp = new Title(title, sub, 10, 40, 10);
         Utils.later(time, () -> players.forEach(it -> {
             if (it.isOnline()) it.sendTitle(tmp);
         }));
-    }
-
-    public void messages(final String msg) {
-        players.forEach(it -> {
-            if (it.isOnline()) it.sendMessage(msg);
-        });
     }
 
     public static void title(final Player player, final String title, final String sub) {

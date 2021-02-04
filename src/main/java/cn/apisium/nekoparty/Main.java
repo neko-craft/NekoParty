@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @Commands(@org.bukkit.plugin.java.annotation.command.Command(name = "party", permission = "nekoparty.use"))
 @ApiVersion(ApiVersion.Target.v1_13)
 public final class Main extends JavaPlugin {
-    private static Block center;
     public static Main INSTANCE;
     private Knockout knockout;
 
@@ -35,16 +34,15 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         Utils.init();
-        center = getServer().getWorld("world").getBlockAt(-166, 200, 259);
         getServer().getPluginCommand("party").setExecutor(this);
-        knockout = new Knockout(center, getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
+        knockout = new Knockout(getServer().getWorld("world").getBlockAt(-166, 200, 259),
+                getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        LetsJump it = new LetsJump(center, null);
-        it.init();
-        it.start();
+        if (args.length == 0) knockout.start();
+        else if (args[0].equals("clear")) knockout.clear();
         return true;
     }
 }

@@ -2,6 +2,7 @@ package cn.apisium.nekoparty.games;
 
 import cn.apisium.nekoparty.Knockout;
 import cn.apisium.nekoparty.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -55,7 +56,7 @@ public final class RememberTheBlock extends Game {
     @Override
     public void sendIntroduction() {
         knockout.title("§e记住方块", "§b第二轮");
-        knockout.messages("§b§m          §r §a[§e游戏介绍§a] §b§m          \n§a  玩家将被传送到平台上, 游戏开始后, 玩家需要记住周围的方块类型.\n§b  之后平台顶部将会出现一种随机类型的方块, 玩家需要站在之前出现的同种方块的平台上, 否则就会掉下去!\n§b§m                                                          §r\n");
+        Bukkit.broadcastMessage("§b§m          §r §a[§e游戏介绍§a] §b§m          \n§a  玩家将被传送到平台上, 游戏开始后, 玩家需要记住周围的方块类型.\n§b  之后平台顶部将会出现一种随机类型的方块, 玩家需要站在之前出现的同种方块的平台上, 否则就会掉下去!\n§b§m                                                          §r\n");
     }
 
     @Override
@@ -72,10 +73,12 @@ public final class RememberTheBlock extends Game {
             Utils.later(20 * 2, () -> {
                 final Material type = randomMaterial();
                 fillAnswerBlocks(type);
+                knockout.sound();
                 Utils.later(20 * 5, () -> clearBlocks(type));
                 Utils.later(20 * 12, () -> {
                     fillAnswerBlocks(Material.AIR);
                     fillMaskBlocks();
+                    knockout.sound();
                     Utils.later(20 * 3, () -> {
                         knockout.title("§e下一轮即将开始!", "");
                         onceProcess();
