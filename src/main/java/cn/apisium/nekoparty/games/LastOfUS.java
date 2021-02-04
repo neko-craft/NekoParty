@@ -20,10 +20,10 @@ public final class LastOfUS extends Game {
 
     public LastOfUS(final Block block, final Knockout knockout) {
         super(block, knockout);
-        minX = block.getX();
-        minZ = block.getZ();
-        maxX = minX + 36;
-        maxZ = minZ + 36;
+        minX = block.getX() - 2;
+        minZ = block.getZ() - 2;
+        maxX = minX + 40;
+        maxZ = minZ + 40;
         maxY = block.getY() + 20;
         minY = block.getY() - 130;
     }
