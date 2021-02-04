@@ -2,9 +2,8 @@ package cn.apisium.nekoparty.games;
 
 import cn.apisium.nekoparty.Knockout;
 import cn.apisium.nekoparty.Utils;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import com.destroystokyo.paper.Title;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,7 +15,7 @@ import java.util.HashSet;
 import java.util.Random;
 
 public final class LetsJump extends Game {
-    public int remainsCount;
+    public final int remainsCount = knockout.remains.size() / 4 * 3;
     private final static Random random = new Random();
     private boolean[][] grids = new boolean[12][12];
     private final int minX, minZ, maxX, maxZ, maxY, minY, rightX;
@@ -27,6 +26,7 @@ public final class LetsJump extends Game {
     public LetsJump(Block block, Knockout knockout) {
         super(block, knockout);
         leftSide = block.getLocation().add(-4, 1, 12);
+        leftSide.setYaw(-90);
         int tmp = block.getX();
         minX = tmp - 6;
         minZ = block.getZ();
@@ -42,13 +42,8 @@ public final class LetsJump extends Game {
         checkPlayerCount();
     }
 
-    private void calcPromotionCount() {
-        remainsCount = knockout.remains.size() / 2;
-    }
     private void checkPlayerCount() {
-        calcPromotionCount();
-        if (remainsCount > promotions.size()) return;
-        knockout.remains.forEach(it -> {
+        if (remainsCount <= promotions.size()) new HashSet<>(knockout.remains).forEach(it -> {
             if (!promotions.contains(it)) knockout.knockout(it);
         });
     }
@@ -60,11 +55,10 @@ public final class LetsJump extends Game {
     @Override
     public void init() {
         promotions.clear();
-        calcPromotionCount();
         final Location loc = center.getLocation();
         grids = new boolean[12][12];
         boolean left = false, right = false;
-        int prev = 4 + random.nextInt(6);
+        int prev = 4 + random.nextInt(4);
         for (int i = 0; i < 12;) {
             grids[i][prev] = true;
             boolean canLeft = !right && prev > 0, canRight = !left && prev < 11;
@@ -122,8 +116,8 @@ public final class LetsJump extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e跳跃吧", "§b第一轮");
-        Bukkit.broadcastMessage("§b§m          §r §a[§e游戏介绍§a] §b§m          \n§a  玩家需要在前方的方块中找到正确的路最终到达终点.\n§b  你的目标是尽快到达终点, 否则将会被淘汰!\n§b§m                                                          §r\n");
+        knockout.title("§e跳跃吧!", "§b第一轮");
+        Bukkit.broadcastMessage("§b§m               §r §a[§e游戏介绍§a] §b§m               \n§a  玩家需要在前方的方块中找到正确的路最终到达终点.\n§b  你的目标是尽快到达终点, 否则将会被淘汰!\n§b§m                                                          §r\n");
     }
 
     @Override
@@ -136,7 +130,7 @@ public final class LetsJump extends Game {
         e.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerMove(final PlayerMoveEvent e) {
         final Player player = e.getPlayer();
         if (!knockout.remains.contains(player) || promotions.contains(player)) return;
@@ -148,6 +142,11 @@ public final class LetsJump extends Game {
         }
         if (loc.getX() > rightX) {
             promotions.add(player);
+            player.setGameMode(GameMode.SPECTATOR);
+            player.sendTitle(new Title("§a成功晋级!", "", 10, 40, 10));
+            final Location l = player.getLocation();
+            player.playSound(l, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            knockout.particle(l);
             checkPlayerCount();
             return;
         }

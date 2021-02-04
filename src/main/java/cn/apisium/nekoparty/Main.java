@@ -1,9 +1,10 @@
 package cn.apisium.nekoparty;
 
-import cn.apisium.nekoparty.games.LetsJump;
-import org.bukkit.block.Block;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Commands;
 import org.bukkit.plugin.java.annotation.permission.Permission;
@@ -12,11 +13,9 @@ import org.bukkit.plugin.java.annotation.plugin.*;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "ConstantConditions"})
 @Plugin(name = "NekoParty", version = "1.0")
 @Description("A party in Minecraft.")
 @Author("Shirasawa")
@@ -30,19 +29,23 @@ public final class Main extends JavaPlugin {
 
     { INSTANCE = this; }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onEnable() {
         Utils.init();
         getServer().getPluginCommand("party").setExecutor(this);
-        knockout = new Knockout(getServer().getWorld("world").getBlockAt(-166, 200, 259),
-                getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (args.length == 0) knockout.start();
-        else if (args[0].equals("clear")) knockout.clear();
+        if (args.length == 0) {
+            if (knockout != null) {
+                knockout.stop();
+                knockout = null;
+            }
+            knockout = new Knockout(getServer().getWorld("world").getBlockAt(-166, 200, 259),
+                    getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
+            knockout.start();
+        } else if (args[0].equals("clear")) knockout.clear();
         return true;
     }
 }

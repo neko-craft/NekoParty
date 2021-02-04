@@ -62,7 +62,7 @@ public final class Utils {
         final BukkitTask[] obj = new BukkitTask[1];
         obj[0] = Main.INSTANCE.getServer().getScheduler().runTaskTimer(Main.INSTANCE, () -> {
             int it = i.getAndIncrement();
-            if (it + 1 < times) fn.accept(it);
+            if (it + 1 <= times) fn.accept(it);
             else {
                 cb.run();
                 if (obj[0] != null) obj[0].cancel();

@@ -25,7 +25,7 @@ public final class LastOfUS extends Game {
         maxX = minX + 36;
         maxZ = minZ + 36;
         maxY = block.getY() + 20;
-        minY = block.getY() - 140;
+        minY = block.getY() - 130;
     }
 
     @Override
@@ -47,7 +47,7 @@ public final class LastOfUS extends Game {
     @Override
     public void sendIntroduction() {
         knockout.title("§e最后生还者", "§b最后一轮");
-        Bukkit.broadcastMessage("§b§m          §r §a[§e游戏介绍§a] §b§m          \n§a  玩家将站立在冰平台上, 当游戏开始后, 被站立过的冰块将会破碎.\n§b  你的目标是存活到最后, 如果不小心失足掉下去将会被淘汰!\n§b§m                                                          §r\n");
+        Bukkit.broadcastMessage("§b§m               §r §a[§e游戏介绍§a] §b§m               \n§a  玩家将站立在冰平台上, 当游戏开始后, 被站立过的冰块将会破碎.\n§b  你的目标是存活到最后, 如果不小心失足掉下去将会被淘汰!\n§b§m                                                          §r\n");
     }
 
     @Override
