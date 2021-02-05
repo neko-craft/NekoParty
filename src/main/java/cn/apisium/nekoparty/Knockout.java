@@ -1,5 +1,6 @@
 package cn.apisium.nekoparty;
 
+import cn.apisium.nekoparty.games.DangerousFlowers;
 import cn.apisium.nekoparty.games.LastOfUS;
 import cn.apisium.nekoparty.games.LetsJump;
 import cn.apisium.nekoparty.games.RememberTheBlock;
@@ -10,12 +11,10 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.*;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
 
@@ -24,6 +23,7 @@ public final class Knockout implements Listener {
     private final LetsJump letsJump;
     private final LastOfUS lastOfUS;
     private final RememberTheBlock rememberTheBlock;
+    private final DangerousFlowers dangerousFlowers;
     private final Set<Player> players;
     public final Set<Player> remains;
     private final LinkedList<String> ranking = new LinkedList<>();
@@ -37,6 +37,7 @@ public final class Knockout implements Listener {
         remains = new HashSet<>(players);
         letsJump = new LetsJump(center, this);
         lastOfUS = new LastOfUS(center, this);
+        dangerousFlowers = new DangerousFlowers(center, this);
         rememberTheBlock = new RememberTheBlock(center, this);
     }
 
@@ -44,8 +45,11 @@ public final class Knockout implements Listener {
         if (players.size() < 4) throw new RuntimeException("人数过少!");
         letsJump.clear();
         lastOfUS.clear();
+        dangerousFlowers.clear();
         rememberTheBlock.clear();
         Bukkit.getPluginManager().registerEvents(this, Main.INSTANCE);
+        dangerousFlowers.init();
+        dangerousFlowers.start();
         setGameMode(GameMode.SPECTATOR);
         teleport(center);
         title("§e比赛即将开始!", "");
@@ -57,8 +61,10 @@ public final class Knockout implements Listener {
         letsJump.clear();
         lastOfUS.clear();
         rememberTheBlock.clear();
+        dangerousFlowers.clear();
         players.clear();
         remains.clear();
+        Utils.clearNeko(center);
     }
 
     public void particle(final Location location) {
@@ -68,25 +74,41 @@ public final class Knockout implements Listener {
     public void stop() {
         letsJump.stop();
         rememberTheBlock.stop();
+        dangerousFlowers.stop();
         lastOfUS.stop();
         clear();
     }
 
     private void nextGame() {
-        remains.forEach(it -> it.setFoodLevel(20));
+        remains.forEach(it -> {
+            it.setFoodLevel(20);
+            it.setHealth(20);
+            PlayerInventory inv = it.getInventory();
+            inv.setItemInMainHand(null);
+            inv.setItemInOffHand(null);
+            inv.setBoots(null);
+            inv.setHelmet(null);
+            inv.setChestplate(null);
+            inv.setLeggings(null);
+        });
         switch (++stage) {
             case 1:
                 letsJump.sendIntroduction();
                 break;
             case 2:
-                rememberTheBlock.sendIntroduction();
+                dangerousFlowers.sendIntroduction();
                 break;
             case 3:
+                rememberTheBlock.sendIntroduction();
+                break;
+            case 4:
                 lastOfUS.sendIntroduction();
                 break;
             default: return;
         }
+        Utils.fillNeko(center);
         Utils.timer(20, 20 * 25, 5, it -> title("§e" + (5 - it), "§b准备时间即将结束!"), () -> {
+            Utils.clearNeko(center);
             started = true;
             sound();
             switch (stage) {
@@ -95,10 +117,14 @@ public final class Knockout implements Listener {
                     letsJump.teleport();
                     break;
                 case 2:
+                    dangerousFlowers.init();
+                    dangerousFlowers.teleport();
+                    break;
+                case 3:
                     rememberTheBlock.init();
                     rememberTheBlock.teleport();
                     break;
-                case 3:
+                case 4:
                     lastOfUS.init();
                     lastOfUS.teleport();
             }
@@ -113,9 +139,12 @@ public final class Knockout implements Listener {
                         letsJump.start();
                         break;
                     case 2:
-                        rememberTheBlock.start();
+                        dangerousFlowers.start();
                         break;
                     case 3:
+                        rememberTheBlock.start();
+                        break;
+                    case 4:
                         lastOfUS.start();
                 }
             });
@@ -160,9 +189,20 @@ public final class Knockout implements Listener {
                 }
                 break;
             case 2:
-                if (knockout <= count / 4) {
+                if (knockout <= count / 5 * 3) {
                     started = false;
                     letsJump.stop();
+                    dangerousFlowers.stop();
+                    remains.forEach(it -> particle(it.getLocation()));
+                    setGameMode(GameMode.SPECTATOR);
+                    dangerousFlowers.clear();
+                    title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40);
+                    nextGame();
+                }
+            case 3:
+                if (knockout <= count / 4) {
+                    started = false;
+                    dangerousFlowers.stop();
                     rememberTheBlock.stop();
                     remains.forEach(it -> particle(it.getLocation()));
                     setGameMode(GameMode.SPECTATOR);
@@ -171,7 +211,7 @@ public final class Knockout implements Listener {
                     nextGame();
                 }
                 break;
-            case 3:
+            case 4:
                 if (knockout < 1) {
                     started = false;
                     lastOfUS.stop();
@@ -243,11 +283,35 @@ public final class Knockout implements Listener {
     @SuppressWarnings("SuspiciousMethodCalls")
     @EventHandler
     public void onPlayerQuit(final EntityDamageEvent e) {
-        if (remains.contains(e.getEntity())) e.setDamage(0);
+        System.out.println(e.getCause().name());
+        if (!remains.contains(e.getEntity()) || (stage == 2 && e.getCause() == EntityDamageEvent.DamageCause.WITHER)) return;
+        e.setDamage(0);
     }
 
     @EventHandler
     public void onPlayerCommandPreprocess(final PlayerCommandPreprocessEvent e) {
-        if (started && remains.contains(e.getPlayer())) e.setCancelled(true);
+        if (remains.contains(e.getPlayer())) e.setCancelled(true);
+    }
+
+    @SuppressWarnings("SuspiciousMethodCalls")
+    @EventHandler
+    public void onEntityRegainHealth(final EntityRegainHealthEvent e) {
+        if (remains.contains(e.getEntity())) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onEntityRegainHealth(final PlayerSwapHandItemsEvent e) {
+        if (remains.contains(e.getPlayer())) e.setCancelled(true);
+    }
+
+    @SuppressWarnings("SuspiciousMethodCalls")
+    @EventHandler
+    public void onEntityRegainHealth(final InventoryClickEvent e) {
+        if (remains.contains(e.getWhoClicked())) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onEntityRegainHealth(final PlayerItemHeldEvent e) {
+        if (remains.contains(e.getPlayer())) e.setCancelled(true);
     }
 }

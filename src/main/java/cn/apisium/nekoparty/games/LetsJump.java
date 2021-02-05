@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Random;
 
 public final class LetsJump extends Game {
-    public final int remainsCount = knockout.remains.size() / 4 * 3;
+    public final int remainsCount = knockout.remains.size() / 5 * 4;
     private final static Random random = new Random();
     private boolean[][] grids = new boolean[12][12];
     private final int minX, minZ, maxX, maxZ, maxY, minY, rightX;

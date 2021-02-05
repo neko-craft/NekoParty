@@ -56,7 +56,7 @@ public final class RememberTheBlock extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e记住方块", "§b第二轮");
+        knockout.title("§e记住方块", "§b第三轮");
         Bukkit.broadcastMessage("§b§m               §r §a[§e游戏介绍§a] §b§m               \n§a  玩家将被传送到平台上, 游戏开始后, 玩家需要记住周围的方块类型.\n§b  之后平台顶部将会出现一种随机类型的方块, 玩家需要站在之前出现的同种方块的平台上, 否则就会掉下去!\n§b§m                                                          §r\n");
     }
 

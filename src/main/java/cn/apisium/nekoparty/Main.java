@@ -1,5 +1,6 @@
 package cn.apisium.nekoparty;
 
+import org.bukkit.SoundCategory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,6 +35,8 @@ public final class Main extends JavaPlugin {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        Utils.fillNeko(getServer().getWorld("world").getBlockAt(-166, 200, 259).getLocation());
+        if (1 == 1) return true;
         if (args.length == 0) {
             if (knockout != null) {
                 knockout.stop();
@@ -42,7 +45,17 @@ public final class Main extends JavaPlugin {
             knockout = new Knockout(getServer().getWorld("world").getBlockAt(-166, 200, 259),
                     getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
             knockout.start();
-        } else if (args[0].equals("clear")) knockout.clear();
+        } else switch (args[0]) {
+            case "clear":
+                if (knockout != null) knockout.clear();
+                break;
+            case "play":
+                getServer().getOnlinePlayers().forEach(it -> it.playSound(it.getLocation(), "com.neko-craft.game", SoundCategory.RECORDS, 1f, 1f));
+                break;
+            case "stop":
+                getServer().getOnlinePlayers().forEach(it -> it.stopSound("com.neko-craft.game", SoundCategory.RECORDS));
+                break;
+        }
         return true;
     }
 }
