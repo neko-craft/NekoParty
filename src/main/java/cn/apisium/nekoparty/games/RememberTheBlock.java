@@ -34,6 +34,7 @@ public final class RememberTheBlock extends Game {
     public void start() {
         if (started) return;
         super.start();
+        knockout.remains.forEach(it -> it.setFoodLevel(20));
         onceProcess();
     }
 

@@ -1,7 +1,6 @@
 package cn.apisium.nekoparty.games;
 
 import cn.apisium.nekoparty.Knockout;
-import cn.apisium.nekoparty.Utils;
 import com.destroystokyo.paper.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -9,7 +8,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -20,8 +18,6 @@ public final class LetsJump extends Game {
     private boolean[][] grids = new boolean[12][12];
     private final int minX, minZ, maxX, maxZ, maxY, minY, rightX;
     private final Location leftSide;
-    private final HashSet<Block> removedBlocks = new HashSet<>();
-    private BukkitTask task;
     private final HashSet<Player> promotions = new HashSet<>();
     public LetsJump(Block block, Knockout knockout) {
         super(block, knockout);
@@ -101,17 +97,8 @@ public final class LetsJump extends Game {
 
     @Override
     public void start() {
+        knockout.remains.forEach(it -> it.setFoodLevel(1));
         super.start();
-        task = Utils.timer(20 * 20, $ -> {
-            removedBlocks.forEach(it -> it.setType(Material.IRON_BLOCK));
-            removedBlocks.clear();
-        });
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
-        task.cancel();
     }
 
     @Override
@@ -127,7 +114,7 @@ public final class LetsJump extends Game {
 
     @EventHandler
     public void onPlayerToggleSprint(final PlayerToggleSprintEvent e) {
-        e.setCancelled(true);
+        if (!e.isSprinting()) e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -151,11 +138,8 @@ public final class LetsJump extends Game {
             return;
         }
         final Block block = loc.getBlock();
-        if (block.getType() != Material.IRON_BLOCK || removedBlocks.contains(block)) return;
+        if (block.getType() != Material.IRON_BLOCK) return;
         final Location loc2 = loc.subtract(center.getLocation());
-        if (!grids[loc2.getBlockX() / 2][loc2.getBlockZ() / 2]) {
-            removedBlocks.add(block);
-            block.setType(Material.AIR);
-        }
+        if (!grids[loc2.getBlockX() / 2][loc2.getBlockZ() / 2]) block.setType(Material.AIR);
     }
 }

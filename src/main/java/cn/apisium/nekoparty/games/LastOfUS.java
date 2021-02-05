@@ -58,6 +58,7 @@ public final class LastOfUS extends Game {
     @Override
     public void start() {
         if (started) return;
+        knockout.remains.forEach(it -> it.setFoodLevel(20));
         blocks1 = new HashSet<>();
         blocks2 = new HashSet<>();
         blocks3 = new HashSet<>();

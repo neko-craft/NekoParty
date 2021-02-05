@@ -208,7 +208,7 @@ public final class Knockout implements Listener {
 
     public void title(final String title, final String sub, final int time) {
         final Title tmp = new Title(title, sub, 10, 40, 10);
-        Utils.later(time, () -> players.forEach(it -> {
+        Utils.later(time, () -> Bukkit.getOnlinePlayers().forEach(it -> {
             if (it.isOnline()) it.sendTitle(tmp);
         }));
     }
