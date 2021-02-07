@@ -92,7 +92,7 @@ public final class DangerousFlowers extends Game {
 
     @Override
     public void teleport() {
-        knockout.remains.forEach(it -> it.teleport(top[random.nextInt(top.length)]));
+        knockout.remains.forEach(it -> it.teleport(top[random.nextInt(top.length)].clone().add(0.5, 1, 0.5)));
     }
 
     @EventHandler

@@ -35,8 +35,6 @@ public final class Main extends JavaPlugin {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        Utils.fillNeko(getServer().getWorld("world").getBlockAt(-166, 200, 259).getLocation());
-        if (1 == 1) return true;
         if (args.length == 0) {
             if (knockout != null) {
                 knockout.stop();

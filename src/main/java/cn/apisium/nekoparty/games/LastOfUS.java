@@ -87,10 +87,11 @@ public final class LastOfUS extends Game {
 
     @EventHandler(ignoreCancelled = true)
     public void onMove(final PlayerMoveEvent e) {
+        if (!knockout.remains.contains(e.getPlayer())) return;
         final Location loc = e.getFrom().add(0, -1, 0);
         if (world != loc.getWorld() || loc.getX() < minX || loc.getX() > maxX || loc.getY() < minY ||
                 loc.getY() > maxY || loc.getZ() < minZ || loc.getZ() > maxZ) {
-            if (knockout.remains.contains(e.getPlayer())) knockout.knockout(e.getPlayer());
+            knockout.knockout(e.getPlayer());
             return;
         }
         addBlock(loc);

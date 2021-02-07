@@ -15,6 +15,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -30,6 +31,10 @@ public final class Knockout implements Listener {
     private int knockout, stage;
     public final int count;
     private boolean started, shouldNotMove;
+    private BukkitTask task;
+
+    private static final Title TITLE = new Title("§a恭喜您晋级了!", "", 10, 40, 10);
+
     public Knockout(final Block center, final Set<Player> players) {
         this.players = players;
         this.center = center.getLocation();
@@ -48,13 +53,17 @@ public final class Knockout implements Listener {
         dangerousFlowers.clear();
         rememberTheBlock.clear();
         Bukkit.getPluginManager().registerEvents(this, Main.INSTANCE);
-        dangerousFlowers.init();
-        dangerousFlowers.start();
         setGameMode(GameMode.SPECTATOR);
         teleport(center);
         title("§e比赛即将开始!", "");
         sound();
         Utils.later(20 * 3, this::nextGame);
+        if (task != null && !task.isCancelled()) task.cancel();
+        task = Bukkit.getScheduler().runTaskTimerAsynchronously(Main.INSTANCE, this::updateChunksLight, 60, 60);
+        Bukkit.getOnlinePlayers().forEach(it -> {
+            it.stopSound("com.neko-craft.game", SoundCategory.RECORDS);
+            it.playSound(it.getLocation(), "com.neko-craft.game", SoundCategory.RECORDS, 1f, 1f);
+        });
     }
 
     public void clear() {
@@ -65,6 +74,10 @@ public final class Knockout implements Listener {
         players.clear();
         remains.clear();
         Utils.clearNeko(center);
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
     }
 
     public void particle(final Location location) {
@@ -107,10 +120,13 @@ public final class Knockout implements Listener {
             default: return;
         }
         Utils.fillNeko(center);
-        Utils.timer(20, 20 * 25, 5, it -> title("§e" + (5 - it), "§b准备时间即将结束!"), () -> {
+        updateChunksLight();
+        Utils.timer(20, 20 * 45, 5, it -> title("§e" + (5 - it), "§b准备时间即将结束!"), () -> {
             Utils.clearNeko(center);
             started = true;
             sound();
+            shouldNotMove = true;
+            setGameMode(GameMode.ADVENTURE);
             switch (stage) {
                 case 1:
                     letsJump.init();
@@ -128,8 +144,6 @@ public final class Knockout implements Listener {
                     lastOfUS.init();
                     lastOfUS.teleport();
             }
-            shouldNotMove = true;
-            setGameMode(GameMode.ADVENTURE);
             Utils.timer(20, 5 * 20, 10, it -> title("§e" + (10 - it), "§b游戏即将开始!"), () -> {
                 shouldNotMove = false;
                 title("§a游戏开始!", "");
@@ -170,6 +184,7 @@ public final class Knockout implements Listener {
         ranking.addFirst(player.getName());
         if (knockout > 1) {
             title(player, "§c您已经被淘汰了!", "§b您可以继续观战");
+            player.sendMessage("§c您已经被淘汰了! §e排名为: §b" + knockout);
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1f, 1f);
             if (stage == 1) {
                 letsJump.onKnockout(player);
@@ -178,13 +193,12 @@ public final class Knockout implements Listener {
         if (!started) return;
         switch (stage) {
             case 1:
-                System.out.println(letsJump.remainsCount + " " + knockout);
                 if (knockout <= letsJump.remainsCount) {
                     started = false;
                     letsJump.stop();
                     setGameMode(GameMode.SPECTATOR);
                     letsJump.clear();
-                    title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40);
+                    Utils.later(60, () -> title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40));
                     nextGame();
                 }
                 break;
@@ -193,10 +207,10 @@ public final class Knockout implements Listener {
                     started = false;
                     letsJump.stop();
                     dangerousFlowers.stop();
-                    remains.forEach(it -> particle(it.getLocation()));
+                    congratulate();
                     setGameMode(GameMode.SPECTATOR);
                     dangerousFlowers.clear();
-                    title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40);
+                    Utils.later(60, () -> title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40));
                     nextGame();
                 }
             case 3:
@@ -204,10 +218,10 @@ public final class Knockout implements Listener {
                     started = false;
                     dangerousFlowers.stop();
                     rememberTheBlock.stop();
-                    remains.forEach(it -> particle(it.getLocation()));
+                    congratulate();
                     setGameMode(GameMode.SPECTATOR);
                     rememberTheBlock.clear();
-                    title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40);
+                    Utils.later(60, () -> title("§a本轮游戏结束!", "§e当前剩余" + knockout + "名玩家!", 40));
                     nextGame();
                 }
                 break;
@@ -216,10 +230,10 @@ public final class Knockout implements Listener {
                     started = false;
                     lastOfUS.stop();
                     rememberTheBlock.stop();
-                    remains.forEach(it -> particle(it.getLocation()));
+                    congratulate();
                     setGameMode(GameMode.SPECTATOR);
                     lastOfUS.clear();
-                    title("§a游戏已结束!", "", 40);
+                    Utils.later(60, () -> title("§a游戏已结束!", "", 40));
                     Iterator<String> iterator = ranking.iterator();
                     Bukkit.broadcastMessage("§b§m          §r §a[§e最终排名§a] §b§m          ");
                     for (int i = 1; i <= 10 && iterator.hasNext(); i++) {
@@ -233,6 +247,16 @@ public final class Knockout implements Listener {
         sound();
     }
 
+    public void congratulate() {
+        remains.forEach(this::congratulate);
+    }
+
+    public void congratulate(final Player it) {
+        particle(it.getLocation());
+        it.sendMessage("§a恭喜您晋级了!");
+        it.sendTitle(TITLE);
+    }
+
     public void title(final String title, final String sub) {
         final Title tmp = new Title(title, sub, 10, 40, 10);
         players.forEach(it -> {
@@ -241,7 +265,7 @@ public final class Knockout implements Listener {
     }
 
     public void sound() {
-        players.forEach(it -> {
+        Bukkit.getOnlinePlayers().forEach(it -> {
             if (it.isOnline()) it.playSound(it.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
         });
     }
@@ -283,7 +307,6 @@ public final class Knockout implements Listener {
     @SuppressWarnings("SuspiciousMethodCalls")
     @EventHandler
     public void onPlayerQuit(final EntityDamageEvent e) {
-        System.out.println(e.getCause().name());
         if (!remains.contains(e.getEntity()) || (stage == 2 && e.getCause() == EntityDamageEvent.DamageCause.WITHER)) return;
         e.setDamage(0);
     }
@@ -313,5 +336,10 @@ public final class Knockout implements Listener {
     @EventHandler
     public void onEntityRegainHealth(final PlayerItemHeldEvent e) {
         if (remains.contains(e.getPlayer())) e.setCancelled(true);
+    }
+
+    public void updateChunksLight() {
+        int x = center.getChunk().getX(), z = center.getChunk().getZ();
+        for (int i = 0; i < 6; i++) for (int j = 0; j < 6; j++) Utils.updateLight(center.getWorld().getChunkAt(x + i, z + j));
     }
 }

@@ -16,7 +16,7 @@ public final class LetsJump extends Game {
     public final int remainsCount = knockout.remains.size() / 5 * 4;
     private final static Random random = new Random();
     private boolean[][] grids = new boolean[12][12];
-    private final int minX, minZ, maxX, maxZ, maxY, minY, rightX;
+    private final int minX, minZ, maxX, maxZ, maxY, minY, rightX, Y;
     private final Location leftSide;
     private final HashSet<Player> promotions = new HashSet<>();
     public LetsJump(Block block, Knockout knockout) {
@@ -24,12 +24,13 @@ public final class LetsJump extends Game {
         leftSide = block.getLocation().add(-4, 1, 12);
         leftSide.setYaw(-90);
         int tmp = block.getX();
+        Y = block.getY();
         minX = tmp - 6;
         minZ = block.getZ();
         maxX = tmp + 30;
         maxZ = minZ + 24;
-        maxY = block.getY() + 20;
-        minY = block.getY() - 20;
+        maxY = Y + 20;
+        minY = Y - 20;
         rightX = tmp + 25;
     }
 
@@ -127,13 +128,12 @@ public final class LetsJump extends Game {
             teleportPlayerToLeftSide(player);
             return;
         }
-        if (loc.getX() > rightX) {
+        if (loc.getX() > rightX && loc.getY() >= Y) {
             promotions.add(player);
             player.setGameMode(GameMode.SPECTATOR);
-            player.sendTitle(new Title("§a成功晋级!", "", 10, 40, 10));
             final Location l = player.getLocation();
             player.playSound(l, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-            knockout.particle(l);
+            knockout.congratulate(player);
             checkPlayerCount();
             return;
         }

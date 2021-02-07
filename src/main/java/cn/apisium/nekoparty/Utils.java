@@ -83,9 +83,6 @@ public final class Utils {
 
     @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     public static void clearNeko(final Location loc) {
-        for (int i = 0; i < NEKO_TYPES.length; i++) {
-            loc.clone().add(i % 21, 0, i / 21).getBlock().setType(Material.AIR);
-            i++;
-        }
+        for (int i = 0; i < NEKO_TYPES.length; i++) loc.clone().add(i % 21, 0, i / 21).getBlock().setType(Material.AIR);
     }
 }
