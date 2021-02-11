@@ -1,7 +1,6 @@
 package cn.apisium.nekoparty.games;
 
 import cn.apisium.nekoparty.Knockout;
-import com.destroystokyo.paper.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -13,7 +12,7 @@ import java.util.HashSet;
 import java.util.Random;
 
 public final class LetsJump extends Game {
-    public final int remainsCount = knockout.remains.size() / 5 * 4;
+    public final int remainsCount = knockout.remains.size() / 10 * 7;
     private final static Random random = new Random();
     private boolean[][] grids = new boolean[12][12];
     private final int minX, minZ, maxX, maxZ, maxY, minY, rightX, Y;

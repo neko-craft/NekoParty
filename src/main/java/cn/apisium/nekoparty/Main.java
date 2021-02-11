@@ -40,7 +40,7 @@ public final class Main extends JavaPlugin {
                 knockout.stop();
                 knockout = null;
             }
-            knockout = new Knockout(getServer().getWorld("world").getBlockAt(-166, 200, 259),
+            knockout = new Knockout(getServer().getWorld("world").getBlockAt(2261, 220, 716),
                     getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
             knockout.start();
         } else switch (args[0]) {

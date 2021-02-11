@@ -8,6 +8,7 @@ import com.destroystokyo.paper.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +21,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 public final class Knockout implements Listener {
-    private final Location center;
+    private final Location center, centerTemp;
     private final LetsJump letsJump;
     private final LastOfUS lastOfUS;
     private final RememberTheBlock rememberTheBlock;
@@ -38,6 +39,7 @@ public final class Knockout implements Listener {
     public Knockout(final Block center, final Set<Player> players) {
         this.players = players;
         this.center = center.getLocation();
+        centerTemp = this.center.clone().add(18, -55, 18);
         knockout = count = players.size();
         remains = new HashSet<>(players);
         letsJump = new LetsJump(center, this);
@@ -203,7 +205,7 @@ public final class Knockout implements Listener {
                 }
                 break;
             case 2:
-                if (knockout <= count / 5 * 3) {
+                if (knockout <= count / 10 * 5) {
                     started = false;
                     letsJump.stop();
                     dangerousFlowers.stop();
@@ -214,7 +216,7 @@ public final class Knockout implements Listener {
                     nextGame();
                 }
             case 3:
-                if (knockout <= count / 4) {
+                if (knockout <= count / 10 * 3) {
                     started = false;
                     dangerousFlowers.stop();
                     rememberTheBlock.stop();
@@ -236,7 +238,7 @@ public final class Knockout implements Listener {
                     Utils.later(60, () -> title("§a游戏已结束!", "", 40));
                     Iterator<String> iterator = ranking.iterator();
                     Bukkit.broadcastMessage("§b§m          §r §a[§e最终排名§a] §b§m          ");
-                    for (int i = 1; i <= 10 && iterator.hasNext(); i++) {
+                    for (int i = 1; i <= 16 && iterator.hasNext(); i++) {
                         Bukkit.broadcastMessage("  §e" + i + ". §a" + iterator.next());
                     }
                     Bukkit.broadcastMessage("§b§m                                                          ");
@@ -311,31 +313,36 @@ public final class Knockout implements Listener {
         e.setDamage(0);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerCommandPreprocess(final PlayerCommandPreprocessEvent e) {
-        if (remains.contains(e.getPlayer())) e.setCancelled(true);
+        if (!e.getPlayer().isOp()) e.setCancelled(true);
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityRegainHealth(final EntityRegainHealthEvent e) {
         if (remains.contains(e.getEntity())) e.setCancelled(true);
     }
 
-    @EventHandler
-    public void onEntityRegainHealth(final PlayerSwapHandItemsEvent e) {
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerSwapHandItems(final PlayerSwapHandItemsEvent e) {
         if (remains.contains(e.getPlayer())) e.setCancelled(true);
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
-    @EventHandler
-    public void onEntityRegainHealth(final InventoryClickEvent e) {
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryClick(final InventoryClickEvent e) {
         if (remains.contains(e.getWhoClicked())) e.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityRegainHealth(final PlayerItemHeldEvent e) {
         if (remains.contains(e.getPlayer())) e.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntitySpawn(final EntitySpawnEvent e) {
+        if (e.getEntity() instanceof Monster && centerTemp.distanceSquared(e.getLocation()) <= 4900) e.setCancelled(true);
     }
 
     public void updateChunksLight() {
