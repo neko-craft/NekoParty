@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerToggleSprintEvent;
 import java.util.HashSet;
 import java.util.Random;
 
+@SuppressWarnings("deprecation")
 public final class LetsJump extends Game {
     public final int remainsCount = knockout.remains.size() / 10 * 7;
     private final static Random random = new Random();
@@ -104,7 +105,8 @@ public final class LetsJump extends Game {
     @Override
     public void sendIntroduction() {
         knockout.title("§e跳跃吧!", "§b第一轮");
-        Bukkit.broadcastMessage("§b§m               §r §a[§e游戏介绍§a] §b§m               \n§a  玩家需要在前方的方块中找到正确的路最终到达终点.\n§b  你的目标是尽快到达终点, 否则将会被淘汰!\n§b§m                                                          §r\n");
+        Bukkit.broadcastMessage(getIntroduction("玩家需要在前方的方块中找到正确的路最终到达终点.",
+                "你的目标是尽快到达终点, 否则将会被淘汰!"));
     }
 
     @Override

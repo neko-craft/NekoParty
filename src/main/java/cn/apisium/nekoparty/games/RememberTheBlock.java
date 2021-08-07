@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.Random;
 
+@SuppressWarnings("deprecation")
 public final class RememberTheBlock extends Game {
     private final static Random random = new Random();
     private final Material[][] grids = new Material[5][5];
@@ -35,6 +36,7 @@ public final class RememberTheBlock extends Game {
         if (started) return;
         super.start();
         knockout.remains.forEach(it -> it.setFoodLevel(20));
+        setItem(Utils.SWORD_WITH_KNOCKBACK);
         onceProcess();
     }
 
@@ -56,13 +58,15 @@ public final class RememberTheBlock extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e记住方块", "§b第三轮");
-        Bukkit.broadcastMessage("§b§m               §r §a[§e游戏介绍§a] §b§m               \n§a  玩家将被传送到平台上, 游戏开始后, 玩家需要记住周围的方块类型.\n§b  之后平台顶部将会出现一种随机类型的方块, 玩家需要站在之前出现的同种方块的平台上, 否则就会掉下去!\n§b§m                                                          §r\n");
+        knockout.title("§e记住方块", "§b第四轮");
+        Bukkit.broadcastMessage(getIntroduction("玩家将被传送到平台上, 游戏开始后, 玩家需要记住周围的方块类型.",
+                "之后平台顶部将会出现一种随机类型的方块, 玩家需要站在之前出现的同种方块的平台上, 否则就会掉下去!"));
     }
 
     @Override
     public void teleport() {
-        knockout.remains.forEach(it -> it.teleport(center.getLocation().clone().add(2 + random.nextInt(16), 1, 2 + random.nextInt(16))));
+        knockout.remains.forEach(it -> it.teleport(center.getLocation().clone()
+                .add(2 + random.nextInt(16), 1, 2 + random.nextInt(16))));
     }
 
     private void onceProcess() {
@@ -146,7 +150,7 @@ public final class RememberTheBlock extends Game {
         final Location loc = e.getFrom();
         if (world != loc.getWorld() || loc.getX() < minX || loc.getX() > maxX || loc.getY() < minY ||
                 loc.getY() > maxY || loc.getZ() < minZ || loc.getZ() > maxZ) {
-            if (knockout.remains.contains(e.getPlayer())) knockout.knockout(e.getPlayer());
+            knockout.knockout(e.getPlayer());
         }
     }
 }

@@ -1,5 +1,6 @@
 package cn.apisium.nekoparty;
 
+import cn.apisium.nekoparty.games.*;
 import org.bukkit.SoundCategory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -41,7 +42,8 @@ public final class Main extends JavaPlugin {
                 knockout = null;
             }
             knockout = new Knockout(getServer().getWorld("world").getBlockAt(2261, 220, 716),
-                    getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()));
+                    getServer().getOnlinePlayers().stream().filter(it -> !it.isOp()).collect(Collectors.toSet()),
+                    LetsJump.class, DangerousFlowers.class, AnvilRain.class, RememberTheBlock.class, LastOfUS.class);
             knockout.start();
         } else switch (args[0]) {
             case "clear":

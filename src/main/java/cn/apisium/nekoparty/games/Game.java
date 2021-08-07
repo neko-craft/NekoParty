@@ -8,6 +8,8 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 public abstract class Game implements Listener {
     final Block center;
@@ -21,7 +23,6 @@ public abstract class Game implements Listener {
         world = block.getWorld();
     }
 
-    abstract public void init();
     public void start() {
         started = true;
         Bukkit.getPluginManager().registerEvents(this, Main.INSTANCE);
@@ -31,9 +32,24 @@ public abstract class Game implements Listener {
         started = false;
         HandlerList.unregisterAll(this);
     }
+    public int getRemainCount() { return -1; }
+    public void setItem(ItemStack is) {
+        knockout.remains.forEach(it -> {
+            PlayerInventory inv = it.getInventory();
+            inv.clear();
+            inv.setItemInMainHand(is);
+            it.updateInventory();
+        });
+    }
+    abstract public void init();
     abstract public void clear();
     abstract public void sendIntroduction();
     abstract public void teleport();
+
+    public static String getIntroduction(String line1, String line2) {
+        return "§b§m               §r §a[§e游戏介绍§a] §b§m               \n  §a" + line1 + "\n  §b" + line2 +
+                "\n§b§m                                                          §r\n";
+    }
 
     public void onKnockout(final Player player) { }
 }

@@ -12,6 +12,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashSet;
 import java.util.Random;
 
+@SuppressWarnings("deprecation")
 public final class LastOfUS extends Game {
     private final static Random random = new Random();
     private final int minX, minZ, maxX, maxZ, maxY, minY;
@@ -25,13 +26,13 @@ public final class LastOfUS extends Game {
         maxX = minX + 40;
         maxZ = minZ + 40;
         maxY = block.getY() + 20;
-        minY = block.getY() - 130;
+        minY = block.getY() - 90;
     }
 
     @Override
     public void init() {
         final Location loc = center.getLocation();
-        for (int k = 0; k < 12; k++) for (int i = 0; i < 36; i++) for (int j = 0; j < 36; j++) {
+        for (int k = 0; k < 8; k++) for (int i = 0; i < 36; i++) for (int j = 0; j < 36; j++) {
             loc.clone().add(i, -k * 10, j).getBlock().setType(Material.PACKED_ICE, false);
         }
     }
@@ -47,17 +48,20 @@ public final class LastOfUS extends Game {
     @Override
     public void sendIntroduction() {
         knockout.title("§e最后生还者", "§b最后一轮");
-        Bukkit.broadcastMessage("§b§m               §r §a[§e游戏介绍§a] §b§m               \n§a  玩家将站立在冰平台上, 当游戏开始后, 被站立过的冰块将会破碎.\n§b  你的目标是存活到最后, 如果不小心失足掉下去将会被淘汰!\n§b§m                                                          §r\n");
+        Bukkit.broadcastMessage(getIntroduction("玩家将站立在冰平台上, 当游戏开始后, 被站立过的冰块将会破碎.",
+                "你的目标是存活到最后, 如果不小心失足掉下去将会被淘汰!"));
     }
 
     @Override
     public void teleport() {
-        knockout.remains.forEach(it -> it.teleport(center.getLocation().clone().add(2 + random.nextInt(34), 1, 2 + random.nextInt(34))));
+        knockout.remains.forEach(it -> it.teleport(center.getLocation().clone()
+                .add(2 + random.nextInt(34), 1, 2 + random.nextInt(34))));
     }
 
     @Override
     public void start() {
         if (started) return;
+        setItem(Utils.SWORD_WITH_KNOCKBACK);
         knockout.remains.forEach(it -> it.setFoodLevel(20));
         blocks1 = new HashSet<>();
         blocks2 = new HashSet<>();
