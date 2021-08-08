@@ -48,7 +48,7 @@ public final class Knockout implements Listener {
     }
 
     public void start() {
-        if (players.size() < 4) throw new RuntimeException("人数过少!");
+        if (players.size() < games.length - 1) throw new RuntimeException("人数过少!");
         for (Game it : games) it.clear();
         Bukkit.getPluginManager().registerEvents(this, Main.INSTANCE);
         setGameMode(GameMode.SPECTATOR);
@@ -89,12 +89,8 @@ public final class Knockout implements Listener {
             it.setFoodLevel(20);
             it.setHealth(20);
             PlayerInventory inv = it.getInventory();
-            inv.setItemInMainHand(null);
-            inv.setItemInOffHand(null);
-            inv.setBoots(null);
-            inv.setHelmet(null);
-            inv.setChestplate(null);
-            inv.setLeggings(null);
+            inv.clear();
+            it.updateInventory();
         });
         if (++stage > games.length) return;
         getCurrentGame().sendIntroduction();
@@ -121,6 +117,11 @@ public final class Knockout implements Listener {
         return knockout;
     }
 
+    public int getShouldRemainsCount() {
+        return stage == games.length ? 0 : (int) Math.round(((double) count) *
+                (1.0 - ((double) stage) / ((double) games.length)));
+    }
+
     public void setGameMode(final GameMode gameMode) {
         remains.forEach(it -> it.setGameMode(gameMode));
     }
@@ -136,19 +137,17 @@ public final class Knockout implements Listener {
         player.setGameMode(GameMode.SPECTATOR);
         player.getInventory().clear();
         player.updateInventory();
-        knockout--;
         ranking.addFirst(player.getName());
+        knockout--;
         if (knockout > 1) {
             title(player, "§c您已经被淘汰了!", "§b您可以继续观战");
             player.sendMessage("§c您已经被淘汰了! §e排名为: §b" + knockout);
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1f, 1f);
-            getCurrentGame().onKnockout(player);
         }
-        if (!started) return;
-        int remainsCount = getCurrentGame().getRemainCount();
-        if (stage > games.length) return;
-        if ((remainsCount != -1 && knockout <= remainsCount) || knockout < 1 ||
-                knockout <= count * (stage / games.length)) {
+        getCurrentGame().onKnockout(player);
+        if (!started || stage > games.length) return;
+        System.out.println(stage + " " + knockout + " " + games.length + " " + count);
+        if (knockout <= getShouldRemainsCount()) {
             started = false;
             getCurrentGame().stop();
             setGameMode(GameMode.SPECTATOR);
@@ -180,10 +179,15 @@ public final class Knockout implements Listener {
         it.sendTitle(TITLE);
     }
 
-    public void title(final String title, final String sub) {
+    public void title(final String title, final String sub) { title(title, sub, false); }
+
+    public void title(final String title, final String sub, final boolean broadcastToMessage) {
         final Title tmp = new Title(title, sub, 10, 40, 10);
         players.forEach(it -> {
-            if (it.isOnline()) it.sendTitle(tmp);
+            if (it.isOnline()) {
+                if (broadcastToMessage) it.sendMessage(sub + ": " + title);
+                it.sendTitle(tmp);
+            }
         });
     }
 
@@ -218,7 +222,7 @@ public final class Knockout implements Listener {
 
     @SuppressWarnings("SuspiciousMethodCalls")
     @EventHandler(ignoreCancelled = true)
-    public void onPlayerMove(final FoodLevelChangeEvent e) {
+    public void onFoodLevelChange(final FoodLevelChangeEvent e) {
         if (remains.contains(e.getEntity())) e.setCancelled(true);
     }
 
@@ -229,8 +233,8 @@ public final class Knockout implements Listener {
 
     @SuppressWarnings("SuspiciousMethodCalls")
     @EventHandler
-    public void onPlayerQuit(final EntityDamageEvent e) {
-        if (!remains.contains(e.getEntity()) || (stage == 2 && e.getCause() == EntityDamageEvent.DamageCause.WITHER)) return;
+    public void onEntityDamage(final EntityDamageEvent e) {
+        if (!remains.contains(e.getEntity()) || e.getCause() == EntityDamageEvent.DamageCause.WITHER) return;
         e.setDamage(0);
     }
 
@@ -263,11 +267,17 @@ public final class Knockout implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntitySpawn(final EntitySpawnEvent e) {
-        if (e.getEntity() instanceof Monster && centerTemp.distanceSquared(e.getLocation()) <= 4900) e.setCancelled(true);
+        if (e.getEntity() instanceof Monster && centerTemp.distanceSquared(e.getLocation()) <= 5000) e.setCancelled(true);
     }
 
     public void updateChunksLight() {
         int x = center.getChunk().getX(), z = center.getChunk().getZ();
         for (int i = 0; i < 6; i++) for (int j = 0; j < 6; j++) Utils.updateLight(center.getWorld().getChunkAt(x + i, z + j));
+    }
+
+    @EventHandler
+    public void onEntityChangeBlock(EntityChangeBlockEvent e) {
+        if (e.getEntityType() == EntityType.FALLING_BLOCK && (e.getTo() == Material.ANVIL ||
+                e.getTo() == Material.CHIPPED_ANVIL || e.getTo() == Material.DAMAGED_ANVIL)) e.setCancelled(true);
     }
 }

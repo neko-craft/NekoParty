@@ -47,7 +47,7 @@ public final class LastOfUS extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e最后生还者", "§b最后一轮");
+        knockout.title("§e最后生还者", "§b最后一轮", true);
         Bukkit.broadcastMessage(getIntroduction("玩家将站立在冰平台上, 当游戏开始后, 被站立过的冰块将会破碎.",
                 "你的目标是存活到最后, 如果不小心失足掉下去将会被淘汰!"));
     }

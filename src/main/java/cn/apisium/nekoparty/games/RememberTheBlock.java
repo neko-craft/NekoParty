@@ -13,6 +13,10 @@ import java.util.Random;
 
 @SuppressWarnings("deprecation")
 public final class RememberTheBlock extends Game {
+    private final static Material[] types = new Material[] {
+            Material.IRON_BLOCK, Material.GOLD_BLOCK, Material.DIAMOND_BLOCK,
+            Material.NETHERITE_BLOCK, Material.EMERALD_BLOCK
+    };
     private final static Random random = new Random();
     private final Material[][] grids = new Material[5][5];
     private final int maxX, minX, maxY, minY, maxZ, minZ;
@@ -58,7 +62,7 @@ public final class RememberTheBlock extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e记住方块", "§b第四轮");
+        knockout.title("§e记住方块", "§b第四轮", true);
         Bukkit.broadcastMessage(getIntroduction("玩家将被传送到平台上, 游戏开始后, 玩家需要记住周围的方块类型.",
                 "之后平台顶部将会出现一种随机类型的方块, 玩家需要站在之前出现的同种方块的平台上, 否则就会掉下去!"));
     }
@@ -71,15 +75,17 @@ public final class RememberTheBlock extends Game {
 
     private void onceProcess() {
         Utils.later(40, () -> knockout.title("§e您需要记住当前脚下方块的布局!", "§a稍后将会开始游戏"));
-        for (int i = 0; i < 5; i++) for (int j = 0; j < 5; j++) grids[i][j] = randomMaterial();
+        for (int i = 0; i < 5; i++) for (int j = 0; j < 5; j++) grids[i][j] = types[random.nextInt(types.length)];
         fillAllBlocks();
-        Utils.timer(20, 20 * 20, 5, it -> knockout.title("§e" + (5 - it), ""), () -> {
+        Utils.timer(20, 20 * 20, 5, it -> {
+            if (started) knockout.title("§e" + (5 - it), "");
+        }, () -> {
             if (!started) return;
             fillMaskBlocks();
             knockout.title("§b正确方块将出现在上方!", "");
             Utils.later(20 * 2, () -> {
                 if (!started) return;
-                final Material type = randomMaterial();
+                final Material type = types[random.nextInt(types.length)];
                 fillAnswerBlocks(type);
                 knockout.sound();
                 Utils.later(20 * 8, () -> clearBlocks(type));
@@ -132,16 +138,6 @@ public final class RememberTheBlock extends Game {
             for (int t = 0; t < 4; t++) for (int k = 0; k < 4; k++) {
                 loc.clone().add(i * 4 + t, 0, j * 4 + k).getBlock().setType(type);
             }
-        }
-    }
-
-    private static Material randomMaterial() {
-        switch (random.nextInt(5)) {
-            case 1: return Material.IRON_BLOCK;
-            case 2: return Material.GOLD_BLOCK;
-            case 3: return Material.DIAMOND_BLOCK;
-            case 4: return Material.NETHERITE_BLOCK;
-            default: return Material.EMERALD_BLOCK;
         }
     }
 

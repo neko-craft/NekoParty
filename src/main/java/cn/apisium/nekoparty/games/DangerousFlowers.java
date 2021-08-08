@@ -94,7 +94,7 @@ public final class DangerousFlowers extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e危险的花朵!", "§b第二轮");
+        knockout.title("§e危险的花朵!", "§b第二轮", true);
         Bukkit.broadcastMessage(getIntroduction("地上的花朵将会随机变成凋零玫瑰.", "你的目标是尽可能地活下去!"));
     }
 

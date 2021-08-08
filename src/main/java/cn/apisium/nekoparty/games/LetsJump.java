@@ -13,7 +13,6 @@ import java.util.Random;
 
 @SuppressWarnings("deprecation")
 public final class LetsJump extends Game {
-    public final int remainsCount = knockout.remains.size() / 10 * 7;
     private final static Random random = new Random();
     private boolean[][] grids = new boolean[12][12];
     private final int minX, minZ, maxX, maxZ, maxY, minY, rightX, Y;
@@ -35,14 +34,11 @@ public final class LetsJump extends Game {
     }
 
     @Override
-    public void onKnockout(Player player) {
-        checkPlayerCount();
-    }
+    public void onKnockout(Player player) { checkPlayerCount(); }
 
     private void checkPlayerCount() {
-        if (remainsCount <= promotions.size()) new HashSet<>(knockout.remains).forEach(it -> {
-            if (!promotions.contains(it)) knockout.knockout(it);
-        });
+        if (knockout.getShouldRemainsCount() > promotions.size()) return;
+        for (Player it : knockout.remains.toArray(Player[]::new)) if (!promotions.contains(it)) knockout.knockout(it);
     }
 
     private void teleportPlayerToLeftSide(final Player player) {
@@ -104,7 +100,7 @@ public final class LetsJump extends Game {
 
     @Override
     public void sendIntroduction() {
-        knockout.title("§e跳跃吧!", "§b第一轮");
+        knockout.title("§e跳跃吧!", "§b第一轮", true);
         Bukkit.broadcastMessage(getIntroduction("玩家需要在前方的方块中找到正确的路最终到达终点.",
                 "你的目标是尽快到达终点, 否则将会被淘汰!"));
     }
